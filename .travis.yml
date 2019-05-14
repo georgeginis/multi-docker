@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t gginis/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+  - docker run gginis/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t gginis/multi-client ./client
+  - docker build -t gginis/multi-nginx ./nginx
+  - docker build -t gginis/multi-server ./server
+  - docker build -t gginis/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push gginis/multi-client
+  - docker push gginis/multi-nginx
+  - docker push gginis/multi-server
+  - docker push gginis/multi-worker
+ 
